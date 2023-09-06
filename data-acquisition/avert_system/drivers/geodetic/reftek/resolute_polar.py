@@ -90,6 +90,8 @@ def query(
         hour=_encode_base36(starttime.hour),
     )
 
+    print(f"   ...attempting to download {query_filename}...")
+
     # Query Resolute Polar for data matching request parameters
     url = f"http://{component_ip}:{component_config.port}/download/{query_filename}"
 

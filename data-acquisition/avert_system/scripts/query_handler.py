@@ -12,23 +12,17 @@ This module provides the command-line interface entry points for data querying.
 
 import argparse
 
-from avert_system.instrument_drivers.cameras import handle_query as handle_query_camera
-from avert_system.instrument_drivers.gnss_loggers import (
-    handle_query as handle_query_gnss
-)
-from avert_system.instrument_drivers.magnetometers import (
-    handle_query as handle_query_magnetic,
-)
-from avert_system.instrument_drivers.seismometers import (
-    handle_query as handle_query_seismic,
-)
+from avert_system.drivers.imaging import handle_query as imaging_query
+from avert_system.drivers.geodetic import handle_query as geodetic_query
+from avert_system.drivers.magnetic import handle_query as magnetic_query
+from avert_system.drivers.seismic import handle_query as seismic_query
 
 
 fn_map = {
-    "camera": handle_query_camera,
-    "gnss": handle_query_gnss,
-    "magnetic": handle_query_magnetic,
-    "seismic": handle_query_seismic,
+    "imaging": imaging_query,
+    "geodetic": geodetic_query,
+    "magnetic": magnetic_query,
+    "seismic": seismic_query,
 }
 
 
@@ -49,10 +43,10 @@ def query_handler(args=None):
     )
 
     # --- Webcams ---
-    query_camera = sub_parser.add_parser(
-        "camera", help="Capture an image with a webcam."
+    imaging_parser = sub_parser.add_parser(
+        "camera", help="Capture an image with a camera."
     )
-    query_camera.add_argument(
+    imaging_parser.add_argument(
         "-m",
         "--model",
         help="Specify the model of camera to be queried.",
@@ -61,20 +55,20 @@ def query_handler(args=None):
     )
 
     # --- GNSS receivers ---
-    query_gnss = sub_parser.add_parser("gnss", help="Query a GNSS receiver.")
-    query_gnss.add_argument(
+    geodetic_parser = sub_parser.add_parser("geodetic", help="Query a GNSS receiver.")
+    geodetic_parser.add_argument(
         "-m",
         "--model",
         help="Specify the model of GNSS receiver to be queried.",
-        choices=["reftek"],
+        choices=["resolute_polar"],
         required=True,
     )
 
     # --- Seismometers ---
-    query_seismic = sub_parser.add_parser(
+    seismic_parser = sub_parser.add_parser(
         "seismic", help="Query a seismometer/datalogger."
     )
-    query_seismic.add_argument(
+    seismic_parser.add_argument(
         "-m",
         "--model",
         help="Specify the model of seismometer/datalogger to be queried.",
@@ -83,10 +77,10 @@ def query_handler(args=None):
     )
 
     # --- Magnetometers ---
-    query_magnetic = sub_parser.add_parser(
+    magnetic_parser = sub_parser.add_parser(
         "magnetic", help="Query a magnetometer/datalogger."
     )
-    query_magnetic.add_argument(
+    magnetic_parser.add_argument(
         "-m",
         "--model",
         help="Specify the model of magnetometer/datalogger to be queried.",

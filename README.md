@@ -11,12 +11,19 @@ The system is composed of a number of layers:
 
 1. System-level configuration, such as configuring the network interfaces and system daemons for managing data acquisition and telemetry
 2. A data acquisition system (a stand-alone Python package)
-3. Auxiliary control system, which confers the ability to autonomously control the power to various physical components inside the box e.g. operating the radio/network relay in burst mode
+3. An auxiliary control system, which confers the ability to autonomously control the power to various physical components inside the box e.g. operating the radio/network relay in burst mode
 
 ## Installation
 The data acquisition package requires a minimum Python version of 3.11—this is the default distribution installed with Debian 12 (Bookworm), which is the operating system used by the single-board computers (SBCs).
 
-The ultra-lightweight `venv` package is used on the SBCs to isolate the system software (and its dependencies) from the system-wide Python installation. If building from source on a new SBC, be sure to create a virtual environment before installing. If testing the system on some other  The hub/node software can be installed by cloning this repository, navigating into the `data-acquisition` directory (`cd data-acquisition`) and running `pip install .`. It is not currently registered on the Python Package Index (nor is there any plan to do so in the near future).
+The ultra-lightweight `venv` package is used on the SBCs to isolate the system software (and its dependencies) from the system-wide Python installation. If building from source on a new SBC, be sure to create a virtual environment before installing. If testing the system on some other platform, feel free to use something like `miniconda`/`conda`/`mamba` for environment and package management. With the specific SBCs we have found it best to install the `numpy` package using the system wide package management tool `apt`, then create the virtual environment with the system site packages included:
+
+```
+sudo apt install python3-numpy
+python -m venv --system-site-packages ~/.avert_env
+```
+
+The hub/node software can be installed by cloning this repository, navigating into the `data-acquisition` directory (`cd data-acquisition`) and running `pip install .`—ensuring your environment is activated first! It is not currently registered on the Python Package Index (nor is there any plan to do so in the near future).
 
 Note: This requires an internet connection.
 
@@ -31,7 +38,7 @@ avert-config install -c <config_file> -t <node>
 Example config files will be added soon.
 
 ## Futures
-Extension to include drivers for a broader range of existing instrumentation systems. `systemd` service files will also be added for each of the 
+Extension to include drivers for a broader range of existing instrumentation systems. `systemd` service files will also be added to demonstrate how the system is deployed in practice.
 
 ## Contact
 You can contact us directly at: avert-system [ at ] proton.me
