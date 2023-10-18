@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-This module can be used to control the web relay state of 
+This module can be used to control the state of the switches on the network-attached
+power relay.
 
 :copyright:
     2023, The AVERT System Team.
@@ -13,22 +14,32 @@ This module can be used to control the web relay state of
 import subprocess
 
 
-class WebRelayQuadClient:
-    RELAY_CHANNEL_MAP = {"sbc": 1, "gnns": 2, "seismic": 3, "radio": 4}
+def set_relay_state(
+    ip: str,
+    channel: str,
+    state: int,
+    username: str = "admin",
+    password: str = "webrelay"
+) -> None:
+    """
+    Change the state of a switch on a network-attached relay.
 
-    def __init__(
-        self, ip_address: str, username: str = "admin", password: str = "webrelay"
-    ) -> None:
-        self.url = f"http://{ip_address}"
-        self.username = username
-        self.password = password
+    Parameters
+    ----------
+    ip: The address of the network-attached relay.
+    channel: The channel to change.
+    state: The state to put the switch in.
+    username: The admin username for the relay (optional).
+    password: The admin password for the relay (optional).
 
-    def set_state(self, relay_channel: str, state: int) -> None:
-        """Update the state of item on a given relay channel."""
+    """
 
-        relay = self.RELAY_CHANNEL_MAP[relay_channel]
-        cmd = (
-            f"curl -u '{self.username}:{self.password}' "
-            f'"{self.url}/state.xml?relay{relay}State={state}"'
-        )
-        subprocess.run(cmd, shell=True)
+    command = [
+        "curl",
+        "-u",
+        f"'{username}:{password}'",
+        f"'http://{ip}/state.xml?relay{channel}State={state}'"
+    ]
+    print(command)
+
+    return subprocess.run(command).returncode

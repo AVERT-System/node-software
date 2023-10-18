@@ -12,3 +12,4 @@ This module contains drivers
 
 from .query_handler import query_handler  # NOQA
 from .config_handler import config_handler  # NOQA
+from .telemeter import telemeter_data  # NOQA
