@@ -40,6 +40,7 @@ dependencies = [
 data-query = "avert_system.scripts:query_handler"
 reftek-config = "avert_system.instrument_drivers.gnss_loggers.reftek.configure:configure_resolute_polar"
 avert-config = "avert_system.scripts:config_handler"
+telemeter = "avert_system.scripts:telemeter_data"
 
 [project.optional-dependencies]
 development = ["black", "ipython"]

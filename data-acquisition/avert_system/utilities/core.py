@@ -11,27 +11,17 @@ Module containing general utilities used throughout the package.
 """
 
 from datetime import datetime as dt, timedelta as td
-import json
 import pathlib
 import subprocess
-from types import SimpleNamespace
-
-import yaml
+import tomllib
 
 
-def read_config(config_type: str) -> dict:
+def read_config() -> dict:
     """Utility function to read in configuration for the node/hub."""
 
-    config_file = pathlib.Path.home() / (
-        f".config/avert/control/{config_type}_config.yml"
-    )
-    with open(config_file, "r") as stream:
-        config = yaml.safe_load(stream)
-
-    # This converts the dict structure into a dot-accessible one.
-    config = json.loads(
-        json.dumps(config), object_hook=lambda item: SimpleNamespace(**item)
-    )
+    config_file = pathlib.Path.home() / ".config/avert/node_config.toml"
+    with config_file.open("rb") as f:
+        config = tomllib.load(f)
 
     return config
 
