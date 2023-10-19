@@ -13,6 +13,7 @@ Module containing general utilities used throughout the package.
 from datetime import datetime as dt, timedelta as td
 import pathlib
 import subprocess
+from subprocess import DEVNULL
 import tomllib
 
 
@@ -138,13 +139,13 @@ def scp(source: str, destination: str, max_attempts: int = 3) -> int:
     return _retry_command_on_failure(command, command[0], max_attempts)
 
 
-def _retry_command_on_failure(command: list, command_name: str, max_attempts: int):
+def _retry_command_on_failure(command: list, command_name: str, max_attempts: int) -> int:
     """Re-run a command if it fails, up to a max number of attempts."""
 
     return_code, attempt = 1, 1
     while attempt <= max_attempts:
         try:
-            return_code = subprocess.run(command).returncode
+            return_code = subprocess.run(command, stdout=DEVNULL).returncode
             if return_code == 0:
                 break
         except Exception as e:

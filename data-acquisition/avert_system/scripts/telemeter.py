@@ -19,7 +19,7 @@ from avert_system.drivers.network_relay import set_relay_state
 from avert_system.utilities import ping, read_config, rsync
 
 
-def _send_one_lan(file: pathlib.Path, ip: str, telemetry_config: dict) -> None:
+def _send_file_lan(file: pathlib.Path, ip: str, telemetry_config: dict) -> int:
     """
     Uses the rsync utility to send a file to a remote machine within the local area
     network.
@@ -30,20 +30,23 @@ def _send_one_lan(file: pathlib.Path, ip: str, telemetry_config: dict) -> None:
     ip: The address to which the file is to be sent.
     network_config: A dictionary containing telemetry information.
 
+    Returns
+    -------
+    return_code: Reports the outcome of telemetry function.
+
     """
 
-    destination = (
-        f"user@{ip}:{file.parents[1] / 'receive' / file.name}"
-    )
+    destination = f"user@{ip}:{file.parents[1] / 'receive' / file.name}"
 
-    return rsync(file, destination, remove_source=True, max_attempts=1)
+    print(f"Sending:\n\t{file}\nto\n\t{destination}...")
+    return rsync(file, destination, remove_source=False, max_attempts=1)
 
 
-def _send_one_upload_server(
+def _send_file_upload_server(
     file: pathlib.Path,
     ip: str,
     telemetry_config: dict
-) -> None:
+) -> int:
     """
     Uses the curl utility to send a file to a remote machine reachable via the internet.
 
@@ -53,19 +56,25 @@ def _send_one_upload_server(
     ip: The address to which the file is to be sent.
     network_config: A dictionary containing telemetry information.
 
+    Returns
+    -------
+
     """
 
     port = telemetry_config["target_port"]
     token = telemetry_config["token"]
 
-    command = ["curl", f"-Ffile=@{file}", f"'http://{ip}:{port}/upload?token={token}'"]
+    destination = f"http://{ip}:{port}/upload?token={token}"
 
-    return subprocess.run(command).returncode
+    command = ["curl", f"-Ffile=@{file}", destination, "-s"]
+
+    print(f"Sending:\n\t{file}\nto\n\t{destination}...")
+    return subprocess.run(command, stdout=subprocess.DEVNULL).returncode
 
 
 TELEMETRY_FN_LOOKUP = {
-    "radio": _send_one_lan,
-    "satellite": _send_one_upload_server,
+    "radio": _send_file_lan,
+    "satellite": _send_file_upload_server,
 }
 
 
@@ -167,10 +176,16 @@ def telemeter_data(args=None):
         sys.exit(return_code)
 
     if args.file is not None:
-        TELEMETRY_FN_LOOKUP[mode](args.file, target_ip, config["telemetry"])
-        sys.exit(0)
+        file = pathlib.Path(args.file)
+        return_code = TELEMETRY_FN_LOOKUP[mode](
+            file, target_ip, config["telemetry"]
+        )
+        if return_code == 0:
+            file.unlink()
+            print("   ...success.")
+        sys.exit(return_code)
 
-    data_dir = pathlib.Path("/home/user/data")
+    data_dir = pathlib.Path(config["data_archive"])
 
     if args.stream is not None:
         files = data_dir.glob(f"{args.stream}/transmit/*")
@@ -183,4 +198,7 @@ def telemeter_data(args=None):
     for i, file in enumerate(files):
         if i == file_transfer_limit:
             sys.exit(0)
-        TELEMETRY_FN_LOOKUP[mode](file, target_ip, config["telemetry"])
+        return_code = TELEMETRY_FN_LOOKUP[mode](file, target_ip, config["telemetry"])
+        if return_code == 0:
+            file.unlink()
+            print("   ...success.")

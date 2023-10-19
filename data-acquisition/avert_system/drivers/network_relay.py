@@ -11,7 +11,10 @@ power relay.
 
 """
 
+import argparse
 import subprocess
+
+from avert_system.utilities import ping, read_config
 
 
 def set_relay_state(
@@ -20,7 +23,7 @@ def set_relay_state(
     state: int,
     username: str = "admin",
     password: str = "webrelay"
-) -> None:
+) -> int:
     """
     Change the state of a switch on a network-attached relay.
 
@@ -32,14 +35,58 @@ def set_relay_state(
     username: The admin username for the relay (optional).
     password: The admin password for the relay (optional).
 
+    Returns
+    -------
+    return_code: Reports the outcome of the curl command.
+
     """
+
+    return_code = ping(ip)
+    if return_code != 0:
+        print("   ...could not find network-attached relay switch.")
+        return return_code
 
     command = [
         "curl",
         "-u",
         f"'{username}:{password}'",
-        f"'http://{ip}/state.xml?relay{channel}State={state}'"
+        f"http://{ip}/state.xml?relay{channel}State={state}"
     ]
-    print(command)
 
-    return subprocess.run(command).returncode
+    return subprocess.run(command, stdout=subprocess.DEVNULL).returncode
+
+
+def relay_cli(args=None):
+    """
+    A command-line entry point for controlling the network-attached relay switch.
+
+    """
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-r",
+        "--relay",
+        help="Specify the switch to toggle.",
+        choices=["1", "2", "3", "4"],
+        required=True,
+    )
+    parser.add_argument(
+        "-s",
+        "--state",
+        help="Specify the state to put the switch into.",
+        choices=["open", "close"],
+        required=True,
+    )
+
+    args = parser.parse_args()
+
+    config = read_config()
+
+    return_code = ping(config["relay"]["ip"])
+    if return_code != 0:
+        print("   ...could not find network-attached relay switch.")
+        return return_code
+
+    state = 0 if args.state == "open" else 1
+
+    _ = set_relay_state(config["relay"]["ip"], args.relay, state)
