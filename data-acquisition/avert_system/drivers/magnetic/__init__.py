@@ -12,52 +12,33 @@ dataloggers for magnetic field systems.
 """
 
 from datetime import datetime as dt
-import pathlib
-import sys
 
 from avert_system.utilities import (
     get_starttime_endtime,
-    read_config,
     sync_data,
 )
 from .nanometrics import query_centaur
 
 
-def handle_query(instrument: str, model: str) -> None:
+def handle_query(
+    instrument_config: dict, component_ip: str, dirs: dict, model: str
+) -> None:
     """
     Handles queries to magnetic instruments attached to the AVERT system.
 
     Parameters
     ----------
-    instrument: Instrument identifier e.g. 'magnetic'.
+    instrument_config: Magnetometer configuration information.
+    component_ip: Address of component within network.
+    dirs: Directories to use for receipt, archival, and transmission.
     model: The model of instrument e.g. 'centaur'.
 
     """
-
-    config = read_config()
-
-    try:
-        instrument_config = config["components"][instrument]
-    except AttributeError:
-        print(f"No '{instrument}' specified in the node configuration. Exiting.")
-        sys.exit(1)
 
     starttime, endtime = get_starttime_endtime(
         dt.utcnow(),
         timestep=instrument_config["timestep"],
     )
-
-    data_dir = pathlib.Path(config["data_archive"]) / instrument
-    component_ip = (
-        f"{config['network']['subnet']}."
-        f"{config['components'][instrument]['ip_extension']}"
-    )
-
-    dirs = {
-        "receive": data_dir / "receive",
-        "transmit": data_dir / "transmit",
-        "archive": data_dir / "ARCHIVE",
-    }
 
     print("Retrieving magnetic data...")
     for channel in instrument_config["channel_codes"]:

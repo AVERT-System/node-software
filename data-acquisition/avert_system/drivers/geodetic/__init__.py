@@ -12,49 +12,27 @@ dataloggers for GNSS systems.
 """
 
 from datetime import datetime as dt
-import pathlib
-import sys
 
-from avert_system.utilities import (
-    get_starttime_endtime,
-    read_config,
-    sync_data,
-)
+from avert_system.utilities import get_starttime_endtime, sync_data
 from .reftek import query_resolute_polar
 
 
-def handle_query(instrument: str, model: str) -> None:
+def handle_query(
+    instrument_config: dict, component_ip: str, dirs: dict, model: str
+) -> None:
     """
     Handles queries to GNSS receivers attached to the AVERT system.
 
     Parameters
     ----------
-    instrument: Instrument identifier e.g. 'geodetic'.
+    instrument_config: GNSS receiver configuration information.
+    component_ip: Address of component within network.
+    dirs: Directories to use for receipt, archival, and transmission.
     model: The model of instrument e.g. 'resolute_polar'.
 
     """
 
     starttime, _ = get_starttime_endtime(dt.utcnow(), timestep=60)
-
-    config = read_config()
-
-    try:
-        instrument_config = config["components"][instrument]
-    except AttributeError:
-        print(f"No '{instrument}' specified in the node configuration. Exiting.")
-        sys.exit(1)
-
-    data_dir = pathlib.Path(config["data_archive"]) / instrument
-    component_ip = (
-        f"{config['network']['subnet']}."
-        f"{config['components'][instrument]['ip_extension']}"
-    )
-
-    dirs = {
-        "receive": data_dir / "receive",
-        "transmit": data_dir / "transmit",
-        "archive": data_dir / "ARCHIVE",
-    }
 
     print("Retrieving GNSS data file...")
     match model:
@@ -69,7 +47,7 @@ def handle_query(instrument: str, model: str) -> None:
 
     print("  ...syncing data...")
     archive_path = instrument_config["archive_format"].format(
-        station=config["metadata"]["site_code"],
+        station=instrument_config["site_code"],
         datetime=starttime,
         jday=starttime.timetuple().tm_yday,
     )
