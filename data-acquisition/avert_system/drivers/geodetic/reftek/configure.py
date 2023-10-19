@@ -28,10 +28,7 @@ def configure_resolute_polar():
     parser = argparse.ArgumentParser()
 
     sub_parser = parser.add_subparsers(
-        title="mode",
-        dest="mode",
-        required=True,
-        help="Specify the mode."
+        title="mode", dest="mode", required=True, help="Specify the mode."
     )
 
     # --- Upload ---

@@ -34,22 +34,30 @@ def _write_image(
 
 
 def handle_query(instrument: str, model: str) -> None:
+    """
+    Handles queries to visible spectrum cameras attached to the AVERT system.
+
+    Parameters
+    ----------
+    instrument: Instrument identifier e.g. 'camera'.
+    model: The model of instrument e.g. 'stardot'.
+
+    """
+
     starttime = dt.utcnow()
 
-    # --- Parse config files ---
-    net_config = read_config("network")
-    node_config = read_config("node")
+    config = read_config()
+
     try:
-        webcam_config = node_config.components.__getattribute__(instrument)
+        instrument_config = config["components"][instrument]
     except AttributeError:
         print(f"No '{instrument}' specified in the node configuration. Exiting.")
         sys.exit(1)
 
-    data_dir = pathlib.Path(node_config.data_directory) / instrument
-    site_code = f"{node_config.site_code}{node_config.site_code_extension}"
+    data_dir = pathlib.Path(config["data_archive"]) / instrument
     component_ip = (
-        f"{net_config.subnet}."
-        f"{net_config.nodes.__getattribute__(site_code).__getattribute__(instrument)}"
+        f"{config['network']['subnet']}."
+        f"{config['components'][instrument]['ip_extension']}"
     )
 
     # --- Make sure the network camera is available ---
@@ -66,10 +74,10 @@ def handle_query(instrument: str, model: str) -> None:
     dirs["receive"].mkdir(exist_ok=True, parents=True)
 
     is_daytime = is_it_daytime(
-        node_config.longitude,
-        node_config.latitude,
-        node_config.timezone,
-        webcam_config.daylight_buffer,
+        config["metadata"]["longitude"],
+        config["metadata"]["latitude"],
+        config["metadata"]["timezone"],
+        instrument_config["daylight_buffer"],
     )
 
     if is_daytime:
@@ -91,7 +99,7 @@ def handle_query(instrument: str, model: str) -> None:
             # Unlink image in receive dir now, saves faff later
             (dirs["receive"] / image_name).unlink()
 
-        for i in range(webcam_config.frame_count):
+        for i in range(instrument_config["frame_count"]):
             utcnow = dt.utcnow()
 
             image_name = (
@@ -99,7 +107,7 @@ def handle_query(instrument: str, model: str) -> None:
                 f"{utcnow.hour:02d}{utcnow.minute:02d}{utcnow.second:02d}"
                 ".jpg"
             )
-            if i == 0 and webcam_config.mode == "video":
+            if i == 0 and instrument_config["mode"] == "video":
                 video_name = f"{image_name.strip('.jpg')}.mp4"
 
             image = capture_image_netcam(component_ip)
@@ -108,11 +116,13 @@ def handle_query(instrument: str, model: str) -> None:
                 # --- Image analysis code ---
                 # Crop
                 cropped_image = image[
-                    webcam_config.min_y_pixel : webcam_config.max_y_pixel,
-                    webcam_config.min_x_pixel : webcam_config.max_x_pixel,
+                    instrument_config["min_y_pixel"] : instrument_config["max_y_pixel"],
+                    instrument_config["min_x_pixel"] : instrument_config["max_x_pixel"],
                     :,
                 ]
-                _write_image(dirs, image_name, cropped_image, webcam_config.quality)
+                _write_image(
+                    dirs, image_name, cropped_image, instrument_config["quality"]
+                )
 
                 # Convert to greyscale
                 greyscale = np.round(
@@ -135,21 +145,21 @@ def handle_query(instrument: str, model: str) -> None:
                     transmit = False
                     break
 
-                if webcam_config.mode == "video":
+                if instrument_config["mode"] == "video":
                     transmit = False
                     break
 
             archive_path = f"{utcnow.year}-{utcnow.month:02}-{utcnow.day:02d}"
             sync_data(image_name, dirs, f"images/{archive_path}", transmit=transmit)
 
-            time.sleep(webcam_config.time_between_frames)
+            time.sleep(instrument_config["time_between_frames"])
 
-            if not transmit and webcam_config.mode != "video":
+            if not transmit and instrument_config["mode"] != "video":
                 (dirs["receive"] / image_name).unlink()
 
-        if webcam_config.mode == "video":
+        if instrument_config["mode"] == "video":
             cmd = (
-                f"ffmpeg -framerate {webcam_config.frame_count} -pattern_type "
+                f"ffmpeg -framerate {instrument_config['frame_count']} -pattern_type "
                 f"glob -i '{dirs['receive'] / f'{archive_path}_*.jpg'}' -c:v "
                 f"libx264 -pix_fmt yuv420p {dirs['receive'] / video_name}"
             )

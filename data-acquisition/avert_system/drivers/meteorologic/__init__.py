@@ -20,35 +20,41 @@ from avert_system.utilities import init_logging, read_config
 
 
 def handle_query(instrument: str, model: str, debug: bool) -> None:
+    """
+    Handles queries to meteorological instruments attached to the AVERT system.
+
+    Parameters
+    ----------
+    instrument: Instrument identifier e.g. 'weather'.
+    model: The model of instrument e.g. 'vaisala'.
+
+    """
+
     starttime = dt.utcnow()
 
-    # --- Spin up logging ---
-    logger = init_logging(starttime, instrument, debug)
+    config = read_config()
 
-    # --- Parse config files ---
-    net_config = read_config("network")
-    node_config = read_config("node")
     try:
-        weather_config = node_config.components.__getattribute__(instrument)
+        instrument_config = config["components"][instrument]
     except AttributeError:
-        logger.info(f"No '{instrument}' specified in the node configuration. Exiting.")
+        print(f"No '{instrument}' specified in the node configuration. Exiting.")
         sys.exit(1)
 
     with serial.Serial(
-        port=weather_config.port,
-        baudrate=weather_config.baudrate,
+        port=instrument_config["port"],
+        baudrate=instrument_config["baudrate"],
         bytesize=8,
         parity="N",
         stopbits=1,
         timeout=3,
     ) as serial_connection:
         if not serial_connection.is_open:
-            logger.info(f"{serial_connection.name} is not open. Exiting.")
+            print(f"{serial_connection.name} is not open. Exiting.")
             serial_connection.close()
             sys.exit(1)
 
-        logger.info("Serial connection open, continuing.")
+        print("Serial connection open, continuing.")
         while True:
             msg = serial_connection.readline()
             if len(msg) <= 0 or len(msg) > 200:
-                logger.info("")
+                print("")

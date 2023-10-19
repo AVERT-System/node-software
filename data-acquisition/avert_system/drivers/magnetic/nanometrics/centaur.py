@@ -18,12 +18,11 @@ from avert_system.utilities.errors import FileQueryException
 
 
 def query(
-    instrument: str,
     starttime: dt,
     endtime: dt,
     channel: str,
     stream_type: str,
-    node_config: dict,
+    instrument_config: dict,
     component_ip: str,
     dirs: dict,
 ) -> str:
@@ -33,12 +32,11 @@ def query(
 
     Parameters
     ----------
-    instrument: Used to select the relevant configuration information from node_config.
     starttime: Beginning of time period of request.
     endtime: End of time period of request.
     channel: FDSN channel code descriptor.
     stream_type: SeisComp3 string to distinguish between data and logs.
-    node_config: Seismometer configuration information.
+    instrument_config: Seismometer configuration information.
     component_ip: Address of component within network.
     dirs: Directories to use for receipt, archival, and transmission.
 
@@ -53,11 +51,10 @@ def query(
     """
 
     # Construct the filename
-    component_config = node_config.components.__getattribute__(instrument)
-    location_code = component_config.location_code
-    filename = component_config.file_format.format(
-        network=node_config.network_code,
-        station=node_config.site_code,
+    location_code = instrument_config["location_code"]
+    filename = instrument_config["file_format"].format(
+        network=instrument_config["network_code"],
+        station=instrument_config["site_code"],
         location="" if location_code is None else location_code,
         channel=channel,
         stream_type=stream_type,
@@ -68,8 +65,8 @@ def query(
     # Query Centaur for data matching request parameters
     url = (
         f"http://{component_ip}/fdsnws/dataselect/1/query?"
-        f"network={node_config.network_code}&"
-        f"station={node_config.site_code}&"
+        f"network={instrument_config['network_code']}&"
+        f"station={instrument_config['site_code']}&"
         f"location={'*' if location_code is None else location_code}&"
         f"channel={channel}&"
         f"starttime={str(starttime).replace(' ', 'T')}&"
