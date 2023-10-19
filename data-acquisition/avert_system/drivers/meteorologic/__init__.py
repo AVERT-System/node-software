@@ -16,29 +16,23 @@ import sys
 
 import serial
 
-from avert_system.utilities import init_logging, read_config
 
-
-def handle_query(instrument: str, model: str, debug: bool) -> None:
+def handle_query(
+    instrument_config: dict, component_ip: str, dirs: dict, model: str
+) -> None:
     """
     Handles queries to meteorological instruments attached to the AVERT system.
 
     Parameters
     ----------
-    instrument: Instrument identifier e.g. 'weather'.
+    instrument_config: Meteorological station configuration information.
+    component_ip: Address of component within network.
+    dirs: Directories to use for receipt, archival, and transmission.
     model: The model of instrument e.g. 'vaisala'.
 
     """
 
     starttime = dt.utcnow()
-
-    config = read_config()
-
-    try:
-        instrument_config = config["components"][instrument]
-    except AttributeError:
-        print(f"No '{instrument}' specified in the node configuration. Exiting.")
-        sys.exit(1)
 
     with serial.Serial(
         port=instrument_config["port"],

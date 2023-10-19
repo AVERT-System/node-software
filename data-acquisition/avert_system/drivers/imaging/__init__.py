@@ -12,15 +12,13 @@ webcameras.
 """
 
 from datetime import datetime as dt
-import pathlib
 import subprocess
-import sys
 import time
 
 import imageio.v3 as iio
 import numpy as np
 
-from avert_system.utilities import ping, read_config, sync_data
+from avert_system.utilities import sync_data
 from avert_system.utilities.solar_tracker import is_it_daytime
 from .netcam import capture_image as capture_image_netcam
 
@@ -33,50 +31,27 @@ def _write_image(
     iio.imwrite(dirs["receive"] / image_name, image, quality=quality, optimize=True)
 
 
-def handle_query(instrument: str, model: str) -> None:
+def handle_query(
+    instrument_config: dict, component_ip: str, dirs: dict, model: str, metadata: dict
+) -> None:
     """
-    Handles queries to visible spectrum cameras attached to the AVERT system.
+    Handles queries to cameras attached to the AVERT system.
 
     Parameters
     ----------
-    instrument: Instrument identifier e.g. 'camera'.
+    instrument_config: Camera configuration information.
+    component_ip: Address of component within network.
+    dirs: Directories to use for receipt, archival, and transmission.
     model: The model of instrument e.g. 'stardot'.
 
     """
 
     starttime = dt.utcnow()
 
-    config = read_config()
-
-    try:
-        instrument_config = config["components"][instrument]
-    except AttributeError:
-        print(f"No '{instrument}' specified in the node configuration. Exiting.")
-        sys.exit(1)
-
-    data_dir = pathlib.Path(config["data_archive"]) / instrument
-    component_ip = (
-        f"{config['network']['subnet']}."
-        f"{config['components'][instrument]['ip_extension']}"
-    )
-
-    # --- Make sure the network camera is available ---
-    return_code = ping(component_ip)
-    if return_code != 0:
-        print("Camera not available. Exiting.")
-        sys.exit(return_code)
-
-    dirs = {
-        "receive": data_dir / "receive",
-        "transmit": data_dir / "transmit",
-        "archive": data_dir / "ARCHIVE",
-    }
-    dirs["receive"].mkdir(exist_ok=True, parents=True)
-
     is_daytime = is_it_daytime(
-        config["metadata"]["longitude"],
-        config["metadata"]["latitude"],
-        config["metadata"]["timezone"],
+        metadata["longitude"],
+        metadata["latitude"],
+        metadata["timezone"],
         instrument_config["daylight_buffer"],
     )
 
