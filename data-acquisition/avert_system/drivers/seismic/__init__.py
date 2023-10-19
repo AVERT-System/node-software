@@ -30,29 +30,27 @@ def handle_query(instrument: str, model: str) -> None:
     Parameters
     ----------
     instrument: Instrument identifier e.g. 'seismic'.
-    model: The model of instrument (not used, but would be 'centaur' or similar).
+    model: The model of instrument e.g. 'centaur'.
 
     """
 
-    # --- Parse config files ---
-    net_config = read_config("network")
-    node_config = read_config("node")
+    config = read_config()
+
     try:
-        instrument_config = node_config.components.__getattribute__(instrument)
+        instrument_config = config["components"][instrument]
     except AttributeError:
         print(f"No '{instrument}' specified in the node configuration. Exiting.")
         sys.exit(1)
 
     starttime, endtime = get_starttime_endtime(
         dt.utcnow(),
-        timestep=instrument_config.timestep,
+        timestep=instrument_config["timestep"],
     )
 
-    data_dir = pathlib.Path(node_config.data_directory) / instrument
-    site_code = f"{node_config.site_code}{node_config.site_code_extension}"
+    data_dir = pathlib.Path(config["data_archive"]) / instrument
     component_ip = (
-        f"{net_config.subnet}."
-        f"{net_config.nodes.__getattribute__(site_code).__getattribute__(instrument)}"
+        f"{config['network']['subnet']}."
+        f"{config['components'][instrument]['ip_extension']}"
     )
 
     # --- Waveform data ---
@@ -63,26 +61,25 @@ def handle_query(instrument: str, model: str) -> None:
     }
 
     print("Retrieving waveform data...")
-    for channel in instrument_config.channel_codes.split(","):
+    for channel in instrument_config["channel_codes"]:
         print(f"  ...retrieving {channel} data...")
 
         match model:
             case "centaur":
                 filename = query_centaur(
-                    instrument,
                     starttime,
                     endtime,
                     channel,
                     "D",
-                    node_config,
+                    instrument_config,
                     component_ip,
                     dirs,
                 )
 
         print(f"  ...syncing {channel} data...")
-        archive_path = instrument_config.archive_format.format(
-            network=node_config.network_code,
-            station=node_config.site_code,
+        archive_path = instrument_config["archive_format"].format(
+            network=instrument_config["network_code"],
+            station=instrument_config["site_code"],
             channel=channel,
             stream_type="D",
             datetime=starttime,
@@ -97,26 +94,25 @@ def handle_query(instrument: str, model: str) -> None:
     }
 
     print("Retrieving SOH log data...")
-    for channel in instrument_config.soh_channel_codes.split(","):
+    for channel in instrument_config["soh_channel_codes"]:
         print(f"  ...retrieving {channel} data...")
 
         match model:
             case "centaur":
                 filename = query_centaur(
-                    instrument,
                     starttime,
                     endtime,
                     channel,
                     "S",
-                    node_config,
+                    instrument_config,
                     component_ip,
                     dirs,
                 )
 
         print(f"  ...syncing {channel} data...")
-        archive_path = instrument_config.archive_format.format(
-            network=node_config.network_code,
-            station=node_config.site_code,
+        archive_path = instrument_config["archive_format"].format(
+            network=instrument_config["network_code"],
+            station=instrument_config["site_code"],
             channel=channel,
             stream_type="S",
             datetime=starttime,

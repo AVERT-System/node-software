@@ -19,13 +19,13 @@ from avert_system.utilities.errors import FileQueryException
 
 
 REGISTERS = {
-    "battery_voltage": (0x0008, 100/2**15),
-    "array_voltage": (0x0009, 100/2**15),
-    "load_voltage": (0x000A, 100/2**15),
-    "charging_current": (0x000B, 79.16/2**15),
-    "load_current": (0x000C, 79.16/2**15),
-    "min_daily_voltage": (0x002B, 100/2**15),
-    "max_daily_voltage": (0x002C, 100/2**15),
+    "battery_voltage": (0x0008, 100 / 2**15),
+    "array_voltage": (0x0009, 100 / 2**15),
+    "load_voltage": (0x000A, 100 / 2**15),
+    "charging_current": (0x000B, 79.16 / 2**15),
+    "load_current": (0x000C, 79.16 / 2**15),
+    "min_daily_voltage": (0x002B, 100 / 2**15),
+    "max_daily_voltage": (0x002C, 100 / 2**15),
     "daily_charge": (0x002D, 0.1),
     "daily_load": (0x002E, 0.1),
     "ambient_temperature": (0x000F, 1.0),
