@@ -33,23 +33,20 @@ def handle_query(instrument: str, model: str) -> None:
 
     utcnow = dt.utcnow()
 
-    # --- Parse config files ---
-    net_config = read_config("network")
-    node_config = read_config("node")
+    config = read_config()
+
     try:
-        doas_config = node_config.components.__getattribute__(instrument)
+        instrument_config = config["components"][instrument]
     except AttributeError:
         print(f"No '{instrument}' specified in the node configuration. Exiting.")
         sys.exit(1)
 
-    data_dir = pathlib.Path(node_config.data_directory) / instrument
-    site_code = f"{node_config.site_code}{node_config.site_code_extension}"
+    data_dir = pathlib.Path(config["data_archive"]) / instrument
     component_ip = (
-        f"{net_config.subnet}."
-        f"{net_config.nodes.__getattribute__(site_code).__getattribute__(instrument)}"
+        f"{config['network']['subnet']}."
+        f"{config['components'][instrument]['ip_extension']}"
     )
 
-    # --- DOAS data ---
     dirs = {
         "receive": data_dir / "receive",
         "transmit": data_dir / "transmit",
@@ -65,7 +62,7 @@ def handle_query(instrument: str, model: str) -> None:
     print("Retrieving DOAS data...")
     dirs["receive"].mkdir(exist_ok=True, parents=True)
     return_code = scp(
-        source=f"{doas_config.username}@{component_ip}:u0*.pak",
+        source=f"{instrument_config['username']}@{component_ip}:u0*.pak",
         destination=f"{dirs['receive']}/",
     )
 
@@ -80,10 +77,13 @@ def handle_query(instrument: str, model: str) -> None:
     source_files = sorted(list(dirs["receive"].glob("*.pak")))
     for i, source_file in enumerate(source_files):
         # Only transmit every nth scan, specified in the config file.
-        transmit = i % doas_config.send_every == 0
+        transmit = i % instrument_config["send_every"] == 0
 
         filecount = len(list(today.glob("*.pak")))
-        filename = f"{site_code}_{archive_path}_u{hex(filecount)[2:].zfill(3)}.pak"
+        filename = (
+            f"{instrument_config['site_code']}_{archive_path}"
+            f"_u{hex(filecount)[2:].zfill(3)}.pak"
+        )
 
         print(f"   ...sync'ing {source_file.name} to {today / filename}...")
         sync_data(
@@ -93,13 +93,13 @@ def handle_query(instrument: str, model: str) -> None:
             new_filename=filename,
             transmit=transmit,
         )
-    
+
     # Delete source files from onboard computer
     # Done in one go, rather than file by file, as the command-over-ssh is SLOW
     print("   ...removing source files from onboard computer...")
     return_code = subprocess.run(
         [
-            *["ssh", f"{doas_config.username}@{component_ip}"],
+            *["ssh", f"{instrument_config['username']}@{component_ip}"],
             *["rm", "-f"],
             *[f"~/{source_file.name}" for source_file in source_files],
         ]
@@ -113,7 +113,10 @@ def handle_query(instrument: str, model: str) -> None:
     if remote_dirs.decode() != "":
         for remote_dir in remote_dirs.decode().split():
             return_code = scp(
-                source=f"{doas_config.username}@{component_ip}:{remote_dir}u*.pak",
+                source=(
+                    f"{instrument_config['username']}"
+                    f"@{component_ip}:{remote_dir}u*.pak"
+                ),
                 destination=f"{dirs['receive']}/",
             )
 
@@ -124,12 +127,11 @@ def handle_query(instrument: str, model: str) -> None:
             for source_file in dirs["receive"].glob("*.pak"):
                 filecount = len(list(today.glob("*.pak")))
                 filename = (
-                    f"{site_code}_{archive_path}_{hex(filecount)[2:].zfill(3)}.pak"
+                    f"{instrument_config['site_code']}_{archive_path}"
+                    f"_{hex(filecount)[2:].zfill(3)}.pak"
                 )
 
-                print(
-                    f"   ...sync'ing {source_file.name} to {today / filename}..."
-                )
+                print(f"   ...sync'ing {source_file.name} to {today / filename}...")
                 sync_data(source_file.name, dirs, archive_path, new_filename=filename)
 
         # Delete source directories from onboard computer
@@ -138,7 +140,7 @@ def handle_query(instrument: str, model: str) -> None:
         return_code = subprocess.run(
             [
                 *["ssh", f"novac@{component_ip}", "rm", "-rf"],
-                *[f"~/{remote_dir}" for remote_dir in remote_dirs.decode().split()]
+                *[f"~/{remote_dir}" for remote_dir in remote_dirs.decode().split()],
             ]
         ).returncode
 

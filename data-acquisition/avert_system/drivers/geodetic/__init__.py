@@ -30,26 +30,24 @@ def handle_query(instrument: str, model: str) -> None:
     Parameters
     ----------
     instrument: Instrument identifier e.g. 'geodetic'.
-    model: The model of instrument (not used, but would be 'resolute_polar' or similar).
+    model: The model of instrument e.g. 'resolute_polar'.
 
     """
 
     starttime, _ = get_starttime_endtime(dt.utcnow(), timestep=60)
 
-    # --- Parse config files ---
-    net_config = read_config("network")
-    node_config = read_config("node")
+    config = read_config()
+
     try:
-        instrument_config = node_config.components.__getattribute__(instrument)
+        instrument_config = config["components"][instrument]
     except AttributeError:
         print(f"No '{instrument}' specified in the node configuration. Exiting.")
         sys.exit(1)
 
-    data_dir = pathlib.Path(node_config.data_directory) / instrument
-    site_code = f"{node_config.site_code}{node_config.site_code_extension}"
+    data_dir = pathlib.Path(config["data_archive"]) / instrument
     component_ip = (
-        f"{net_config.subnet}."
-        f"{net_config.nodes.__getattribute__(site_code).__getattribute__(instrument)}"
+        f"{config['network']['subnet']}."
+        f"{config['components'][instrument]['ip_extension']}"
     )
 
     dirs = {
@@ -62,17 +60,16 @@ def handle_query(instrument: str, model: str) -> None:
     match model:
         case "resolute_polar":
             filename = query_resolute_polar(
-                instrument,
                 starttime,
                 "1",
-                node_config,
+                instrument_config,
                 component_ip,
                 dirs,
             )
 
     print("  ...syncing data...")
-    archive_path = instrument_config.archive_format.format(
-        station=node_config.site_code,
+    archive_path = instrument_config["archive_format"].format(
+        station=config["metadata"]["site_code"],
         datetime=starttime,
         jday=starttime.timetuple().tm_yday,
     )
