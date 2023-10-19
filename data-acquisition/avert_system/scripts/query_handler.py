@@ -11,12 +11,14 @@ This module provides the command-line interface entry points for data querying.
 """
 
 import argparse
+import pathlib
+import sys
 
 from avert_system.drivers.imaging import handle_query as imaging_query
 from avert_system.drivers.geodetic import handle_query as geodetic_query
 from avert_system.drivers.magnetic import handle_query as magnetic_query
 from avert_system.drivers.seismic import handle_query as seismic_query
-
+from avert_system.utilities import ping, read_config
 
 fn_map = {
     "imaging": imaging_query,
@@ -42,9 +44,9 @@ def query_handler(args=None):
         help="Specify the type of instrument to be queried.",
     )
 
-    # --- Webcams ---
+    # --- Cameras ---
     imaging_parser = sub_parser.add_parser(
-        "camera", help="Capture an image with a camera."
+        "imaging", help="Capture an image with a camera."
     )
     imaging_parser.add_argument(
         "-m",
@@ -88,6 +90,49 @@ def query_handler(args=None):
         required=True,
     )
 
-    # --- Parse arguments and map to the corresponding instrument driver ---
+    # --- Parse arguments ---
     args = parser.parse_args()
-    fn_map[args.instrument](**vars(args))
+    kwargs = {}
+
+    config = read_config()
+
+    try:
+        kwargs["instrument_config"] = config["components"][args.instrument]
+    except KeyError:
+        print(f"No '{args.instrument}' specified in the node configuration. Exiting.")
+        sys.exit(1)
+
+    data_dir = pathlib.Path(config["data_archive"]) / args.instrument
+
+    kwargs["component_ip"] = (
+        f"{config['network']['subnet']}."
+        f"{config['components'][args.instrument]['ip_extension']}"
+    )
+
+    kwargs["dirs"] = {
+        "receive": data_dir / "receive",
+        "transmit": data_dir / "transmit",
+        "archive": data_dir / "ARCHIVE",
+    }
+    kwargs["dirs"]["receive"].mkdir(exist_ok=True, parents=True)
+
+    kwargs["model"] = args.model
+
+    match args.instrument:
+        case "magnetic":
+            pass
+        case "seismic":
+            pass
+        case "geodetic":
+            pass
+        case "imaging":
+            kwargs["metadata"] = config["metadata"]
+
+    print("Verifying instrument is visible on network...")
+    return_code = ping(kwargs["component_ip"])
+    if return_code != 0:
+        print(f"Instrument not visible at: {kwargs['component_ip']}.\nExiting.")
+        sys.exit(return_code)
+
+    # --- Map arguments to appropriate instrument driver ---
+    fn_map[args.instrument](**kwargs)

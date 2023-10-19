@@ -12,52 +12,29 @@ DOAS (Differential Optical Absorption Spectrometer) instrument.
 """
 
 from datetime import datetime as dt
-import pathlib
 import subprocess
 import sys
 
-from avert_system.utilities import scp, ping, read_config, sync_data
+from avert_system.utilities import scp, sync_data
 
 
-def handle_query(instrument: str, model: str) -> None:
+def handle_query(
+    instrument_config: dict, component_ip: str, dirs: dict, model: str
+) -> None:
     """
     Utility script that will pull data from the DOAS logger and sync with both a local
     redundant archive and the hub unit for telemetry.
 
     Parameters
     ----------
-    instrument: Instrument identifier e.g. 'doas'.
+    instrument_config: Scanning DOAS configuration information.
+    component_ip: Address of component within network.
+    dirs: Directories to use for receipt, archival, and transmission.
     model: The model of instrument (not used, but would be 'novac' or similar).
 
     """
 
     utcnow = dt.utcnow()
-
-    config = read_config()
-
-    try:
-        instrument_config = config["components"][instrument]
-    except AttributeError:
-        print(f"No '{instrument}' specified in the node configuration. Exiting.")
-        sys.exit(1)
-
-    data_dir = pathlib.Path(config["data_archive"]) / instrument
-    component_ip = (
-        f"{config['network']['subnet']}."
-        f"{config['components'][instrument]['ip_extension']}"
-    )
-
-    dirs = {
-        "receive": data_dir / "receive",
-        "transmit": data_dir / "transmit",
-        "archive": data_dir / "ARCHIVE",
-    }
-
-    print("Verifying DOAS onboard computer is visible on network...")
-    return_code = ping(component_ip)
-    if return_code != 0:
-        print(f"Onboard computer not visible at: {component_ip}.\nExiting.")
-        sys.exit(return_code)
 
     print("Retrieving DOAS data...")
     dirs["receive"].mkdir(exist_ok=True, parents=True)
