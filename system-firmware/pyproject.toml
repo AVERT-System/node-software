@@ -1,0 +1,51 @@
+[build-system]
+requires = ["wheel", "setuptools >= 61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["avert_firmware*"]
+
+[project]
+name = "avert"
+version = "0.0.1"
+description = "The AVERT system: a configurable control system for remote geoscience instrumentation."
+readme = "README.md"
+license = {text = "GPLv3"}
+requires-python = ">=3.11"
+authors = [
+    {name = "The AVERT System Team", email = "avert-system@proton.me"}
+]
+maintainers = [
+    {name = "Conor Bacon", email = "cbacon@ldeo.columbia.edu"}
+]
+keywords = ["volcanology", "data", "science", "instrumentation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Natural Language :: English",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "imageio",
+    "minimalmodbus",
+    "numpy",
+    "requests",
+]
+
+[project.scripts]
+avertctl = "avert_firmware.ctl:cli"
+reftek-config = "avert_firmware.instrument_drivers.gnss_loggers.reftek.configure:configure_resolute_polar"
+
+[project.optional-dependencies]
+development = ["ruff", "ipython"]
+docs = ["Sphinx >= 1.8.1", "docutils"]
+
+[project.urls]
+GitHub = "https://github.com/AVERT-System/control-box"
+Issues = "https://github.com/AVERT-System/control-box/issues"
+
+[tool.ruff]
+line-length = 88
