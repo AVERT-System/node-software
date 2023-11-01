@@ -1,0 +1,11 @@
+[Unit]
+Description=telemeter any data along the chain.
+Requires=telemeter-data.service
+
+[Timer]
+Unit=telemeter-data.service
+OnCalendar=*-*-* *:05,25,45:10
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target
