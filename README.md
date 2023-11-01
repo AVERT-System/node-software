@@ -3,7 +3,7 @@
 </h1>
 
 # The AVERT System hub/node software
-The [AVERT](https://vulcan1.ldeo.columbia.edu) instrument platform is an attempt to draw together the plethora of existing instrumentation for volcanological observations (e.g. seismometers, GNSS antennas/receivers, cameras, etc) and the potential for edge-computing for rapid data analysis and smart data telemetry.
+The [AVERT](https://avert.ldeo.columbia.edu) instrument platform is an attempt to draw together the plethora of existing instrumentation for volcanological observations (e.g. seismometers, GNSS antennas/receivers, cameras, etc) and the potential for edge-computing for rapid data analysis and smart data telemetry.
 
 An early version of the system is currently deployed at Cleveland volcano in the remote Aleutian island chain, where data are being telemetered back via a satellite uplink (BGAN) to our data server at the Lamont-Doherty Earth Observatory.
 
@@ -23,16 +23,15 @@ sudo apt install python3-numpy
 python -m venv --system-site-packages ~/.avert_env
 ```
 
-The hub/node software can be installed by cloning this repository, navigating into the `data-acquisition` directory (`cd data-acquisition`) and running `pip install .`—ensuring your environment is activated first! It is not currently registered on the Python Package Index (nor is there any plan to do so in the near future).
+The hub/node software can be installed by cloning this repository, navigating into the `node-firmware` directory (`cd node-firmware`) and running `pip install .`—ensuring your environment is activated first! It is not currently registered on the Python Package Index (nor is there any plan to do so in the near future).
 
-Note: This requires an internet connection.
+Note: This requires an internet connection in order to download and install the package dependencies.
 
 ## Configuring a node
-Once the system software is installed, configuration files must be installed using the `avert-config` command-line tool, e.g.:
+Once the AVERT system firmware is installed, a configuration file must be created and installed. This can be done using the `avertctl configure` command-line utility, e.g.:
 
 ```
-avert-config install -c <config_file> -t <network>
-avert-config install -c <config_file> -t <node>
+avertctl configure install -c <config_file>
 ```
 
 Example config files will be added soon.

@@ -1,0 +1,50 @@
+# EXAMPLE AVERT NODE CONFIG FILE
+
+data_archive = "/home/user/data"
+
+[metadata]
+site_code = "NODE"
+site_code_extension = ""
+ip_extension = ""
+longitude = -3.202113
+latitude =  55.950803
+elevation = ""
+timezone = "America/New_York"
+vnum = ""
+owner = "The AVERT project at Lamont-Doherty Earth Observatory"
+owner_contact = "avert-system@proton.me"
+
+[network]
+subnet = "192.168.18"
+user = "user"
+pass = "user"
+
+[relay]
+ip = "169.254.2.30"
+radio = 4
+
+[telemetry]
+transceiver_ip = "192.168.18.101"
+target_ip = "192.168.18.110"
+telemeter_by = "radio"
+
+[components.seismic]
+ip_extension = "192.168.18.102"
+network_code = "LD"
+site_code = "NODE1"
+location_code = ""
+channel_codes = ["BHZ", "BHN", "BHE"]
+archive_format = "{datetime.year}/{network}/{station}/{channel}.{stream_type}"
+file_format = "{network}.{station}.{location}.{channel}.{stream_type}.{datetime.year}-{jday:03d}_{datetime.hour:02d}{datetime.minute:02d}.m"
+soh_channel_codes = ["LCE", "LCQ", "VDT", "VEC", "VEI", "VM1", "VM2", "VM3"]
+timestep = 20
+
+[components.magnetic]
+ip_extension = "192.168.18.102"
+network_code = "LD"
+site_code = "NODE1"
+location_code = ""
+channel_codes = ["LFZ", "LFN", "LFE"]
+archive_format = "{datetime.year}/{network}/{station}/{channel}.{stream_type}"
+file_format = "{network}.{station}.{location}.{channel}.{stream_type}.{datetime.year}-{jday:03d}_{datetime.hour:02d}{datetime.minute:02d}.m"
+timestep = 60

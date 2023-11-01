@@ -1,0 +1,11 @@
+[Unit]
+Description=harvest data from <STREAM> instrument with <MODEL>.
+Requires=harvest-data.service
+
+[Timer]
+Unit=telemeter-data.service
+OnCalendar=*-*-* *:00,20,40:10
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

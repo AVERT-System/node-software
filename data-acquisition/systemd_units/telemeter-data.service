@@ -1,0 +1,12 @@
+[Unit]
+Description=telemeter any data along the chain.
+Wants=telemeter-data.timer
+
+[Service]
+User=root
+Type=oneshot
+WorkingDirectory=/home/user
+ExecStart=/home/user/.avert_env/bin/avertctl telemeter; /home/user/.utils/sleep.sh
+
+[Install]
+WantedBy=multi-user.target

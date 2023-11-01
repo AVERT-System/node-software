@@ -32,24 +32,20 @@ dependencies = [
     "imageio",
     "minimalmodbus",
     "numpy",
-    "PyYAML",
     "requests",
 ]
 
 [project.scripts]
-data-query = "avert_system.scripts:query_handler"
+avertctl = "avert_system.ctl:cli"
 reftek-config = "avert_system.instrument_drivers.gnss_loggers.reftek.configure:configure_resolute_polar"
-avert-config = "avert_system.scripts:config_handler"
-telemeter = "avert_system.scripts:telemeter_data"
-toggle-relay = "avert_system.drivers.network_relay:relay_cli"
 
 [project.optional-dependencies]
-development = ["black", "ipython"]
+development = ["ruff", "ipython"]
 docs = ["Sphinx >= 1.8.1", "docutils"]
 
 [project.urls]
 GitHub = "https://github.com/AVERT-System/control-box"
 Issues = "https://github.com/AVERT-System/control-box/issues"
 
-[tool.black]
+[tool.ruff]
 line-length = 88

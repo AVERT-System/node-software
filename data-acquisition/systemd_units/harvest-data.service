@@ -1,0 +1,12 @@
+[Unit]
+Description=harvest data from <STREAM> instrument with <MODEL>.
+Wants=harvest-data.timer
+
+[Service]
+User=root
+Type=oneshot
+WorkingDirectory=/home/user
+ExecStart=/home/user/.avert_env/bin/avertctl data-query <STREAM> -m <MODEL>
+
+[Install]
+WantedBy=multi-user.target
