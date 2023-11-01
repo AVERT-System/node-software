@@ -84,7 +84,6 @@ def ping(ip_address: str, max_attempts: int = 3) -> int:
 
     """
 
-
     command = ["ping", "-c", "1", "-W", "3", ip_address]
 
     return _retry_command_on_failure(command, command[0], max_attempts)
@@ -139,7 +138,9 @@ def scp(source: str, destination: str, max_attempts: int = 3) -> int:
     return _retry_command_on_failure(command, command[0], max_attempts)
 
 
-def _retry_command_on_failure(command: list, command_name: str, max_attempts: int) -> int:
+def _retry_command_on_failure(
+    command: list, command_name: str, max_attempts: int
+) -> int:
     """Re-run a command if it fails, up to a max number of attempts."""
 
     return_code, attempt = 1, 1

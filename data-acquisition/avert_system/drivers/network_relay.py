@@ -13,6 +13,7 @@ power relay.
 
 import argparse
 import subprocess
+import sys
 
 from avert_system.utilities import ping, read_config
 
@@ -22,7 +23,7 @@ def set_relay_state(
     channel: str,
     state: int,
     username: str = "admin",
-    password: str = "webrelay"
+    password: str = "webrelay",
 ) -> int:
     """
     Change the state of a switch on a network-attached relay.
@@ -50,7 +51,7 @@ def set_relay_state(
         "curl",
         "-u",
         f"'{username}:{password}'",
-        f"http://{ip}/state.xml?relay{channel}State={state}"
+        f"http://{ip}/state.xml?relay{channel}State={state}",
     ]
 
     return subprocess.run(command, stdout=subprocess.DEVNULL).returncode
@@ -78,7 +79,7 @@ def relay_cli(args=None):
         required=True,
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(sys.argv[2:])
 
     config = read_config()
 

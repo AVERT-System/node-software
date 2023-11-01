@@ -16,12 +16,15 @@ import sys
 
 from avert_system.drivers.imaging import handle_query as imaging_query
 from avert_system.drivers.geodetic import handle_query as geodetic_query
+from avert_system.drivers.gas import handle_query as gas_query
 from avert_system.drivers.magnetic import handle_query as magnetic_query
 from avert_system.drivers.seismic import handle_query as seismic_query
 from avert_system.utilities import ping, read_config
 
-fn_map = {
+
+FN_MAP = {
     "imaging": imaging_query,
+    "gas": gas_query,
     "geodetic": geodetic_query,
     "magnetic": magnetic_query,
     "seismic": seismic_query,
@@ -91,7 +94,7 @@ def query_handler(args=None):
     )
 
     # --- Parse arguments ---
-    args = parser.parse_args()
+    args = parser.parse_args(sys.argv[2:])
     kwargs = {}
 
     config = read_config()
@@ -135,4 +138,4 @@ def query_handler(args=None):
         sys.exit(return_code)
 
     # --- Map arguments to appropriate instrument driver ---
-    fn_map[args.instrument](**kwargs)
+    FN_MAP[args.instrument](**kwargs)

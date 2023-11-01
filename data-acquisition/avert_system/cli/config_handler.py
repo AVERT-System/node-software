@@ -12,58 +12,42 @@ install, remove, and report configuration files for the AVERT field system.
 """
 
 import argparse
-import json
 import pathlib
 import pprint
 import shutil
+import sys
 import tomllib as toml
 
-import yaml
 
-
-config_dir = pathlib.Path.home() / ".config" / "avert" / "control"
-
-
-def _init_config(args):
-    """Create a simple example set of config files, useful for demo purposes."""
-
-    print(f"Creating a basic config file and installing to {config_dir}.")
-    config_dir.mkdir(parents=True, exist_ok=True)
+CONFIG_DIR = pathlib.Path.home() / ".config" / "avert" / "control"
 
 
 def _install_config(args):
     """Install a config file to the AVERT system .config dir."""
 
     config_file = pathlib.Path(args.config).resolve()
-    print(f"Attempting to install\n{config_file}\nto {config_dir}...")
+    print(f"Attempting to install\n{config_file}\nto {CONFIG_DIR}...")
 
-    # Ensure file is a .toml/.json file that can be loaded
-    if config_file.suffix not in [".toml", ".yml"]:
-        print("...config files must have a valid file extension: '.toml' or '.yml'")
-        return
+    # Ensure file is a .toml file that can be loaded
+    if config_file.suffix != ".toml":
+        print("...config files must use the TOML file format.")
+        sys.exit(1)
 
     # Ensure file exists
     if not config_file.exists():
         print("...no such file.")
-        return
+        sys.exit(1)
 
     # Ensure the file is a valid TOML/JSON file
     with config_file.open("rb") as f:
-        if config_file.suffix == ".toml":
-            try:
-                _ = toml.load(f)
-            except toml.TOMLDecodeError:
-                print("...file does not appear to be a valid TOML file.")
-                return
-        else:
-            try:
-                _ = yaml.safe_load(f)
-            except json.JSONDecodeError:
-                print("...file does not appear to be a valid JSON file.")
-                return
+        try:
+            _ = toml.load(f)
+        except toml.TOMLDecodeError:
+            print("...file does not appear to be a valid TOML file.")
+            sys.exit(1)
 
     # First, make the relevant sub-directory (if not already present)
-    target_dir = config_dir
+    target_dir = CONFIG_DIR
     target_dir.mkdir(parents=True, exist_ok=True)
 
     # And then copy the config
@@ -71,54 +55,45 @@ def _install_config(args):
     print("...success!")
 
 
-def _uninstall_config(args):
+def _uninstall_config():
     """Uninstall a config file from the AVERT system .config dir."""
 
-    print(f"Attempting to uninstall\n{args.config}\nfrom {config_dir}...")
-    config_file = pathlib.Path(args.config)
-    if not config_file.is_file():
-        print("...no such config file exists.")
-        return
+    config_file = CONFIG_DIR / "node_config.toml"
+
+    print("Attempting to uninstall config file...")
+
+    # Ensure file exists
+    if not config_file.exists():
+        print(f"...no such configuration file at {config_file}.")
+        sys.exit(1)
+
     config_file.unlink()
     print("...success!")
 
 
-def _report_config(args):
+def _report_config():
     """Report the current AVERT system configuration."""
 
-    config_file = config_dir / f"{args.type}_config.yml"
-
-    # Ensure file is a .toml/.json file that can be loaded
-    if config_file.suffix not in [".toml", ".yml"]:
-        print("...config files must have a valid file extension: '.toml' or '.yml'")
-        return
+    config_file = CONFIG_DIR / "node_config.toml"
 
     # Ensure file exists
     if not config_file.exists():
-        print("...system currently has no configuration file.")
-        return
+        print(f"...no such configuration file at {config_file}.")
+        sys.exit(1)
 
     # Ensure the file is a valid TOML/JSON file
     with config_file.open("rb") as f:
-        if config_file.suffix == ".toml":
-            try:
-                config = toml.load(f)
-            except toml.TOMLDecodeError:
-                print("...file does not appear to be a valid TOML file.")
-                return
-        else:
-            try:
-                config = yaml.safe_load(f)
-            except json.JSONDecodeError:
-                print("...file does not appear to be a valid JSON file.")
-                return
+        try:
+            config = toml.load(f)
+        except toml.TOMLDecodeError:
+            print("...file does not appear to be a valid TOML file.")
+            sys.exit(1)
 
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(config)
 
 
-fn_map = {
-    "init": _init_config,
+FN_MAP = {
     "install": _install_config,
     "uninstall": _uninstall_config,
     "report": _report_config,
@@ -126,10 +101,7 @@ fn_map = {
 
 
 def config_handler(args=None):
-    """
-    Main entry point for the config command-line utility.
-
-    """
+    """Main entry point for the config command-line utility."""
 
     parser = argparse.ArgumentParser()
     sub_parser = parser.add_subparsers(
@@ -165,7 +137,7 @@ def config_handler(args=None):
     uninstall_conf.add_argument(
         "-c",
         "--config",
-        help="Name of the config.toml/.yml file to be uninstalled.",
+        help="Name of the .toml file to be uninstalled.",
         required=True,
     )
 
@@ -182,5 +154,5 @@ def config_handler(args=None):
     )
 
     # Parse arguments and execute relevant function
-    args = parser.parse_args(args)
-    fn_map[args.command](args)
+    args = parser.parse_args(sys.argv[2:])
+    FN_MAP[args.command](args)

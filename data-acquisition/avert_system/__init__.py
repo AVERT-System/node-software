@@ -3,8 +3,12 @@
 This package provides the basis for the AVERT system, including a range of drivers for
 accessing data from various different types of instruments.
 
-Control over the system is exposed via a Command-Line Interface which parses a request
-and constructs the relevant data query.
+A collection of utilities for controlling the system is exposed via a command-line
+interface (`avertctl`):
+    - Data acquisition (`avertctl data-query`)
+    - Data telemetry (`avertctl telemeter`)
+    - Power relay switch control (`avertctl toggle-relay`)
+    - System configuration (`avertctl configure`)
 
 :copyright:
     2023, The AVERT System Team.
