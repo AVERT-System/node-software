@@ -10,6 +10,7 @@ Module containing general exceptions used across the system.
 
 """
 
+
 class FileQueryException(Exception):
     def __init__(self):
         pass
