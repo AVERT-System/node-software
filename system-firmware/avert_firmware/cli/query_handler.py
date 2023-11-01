@@ -58,6 +58,16 @@ def query_handler(args=None):
         required=True,
     )
 
+    # --- Gas monitors ---
+    geodetic_parser = sub_parser.add_parser("gas", help="Query a gas monitoring instrument.")
+    geodetic_parser.add_argument(
+        "-m",
+        "--model",
+        help="Specify the model of gas monitoring instrument to be queried.",
+        choices=["novac-doas", "vaisala-gmp343"],
+        required=True,
+    )
+
     # --- GNSS receivers ---
     geodetic_parser = sub_parser.add_parser("geodetic", help="Query a GNSS receiver.")
     geodetic_parser.add_argument(
@@ -124,6 +134,8 @@ def query_handler(args=None):
         case "magnetic":
             pass
         case "seismic":
+            pass
+        case "gas":
             pass
         case "geodetic":
             pass
