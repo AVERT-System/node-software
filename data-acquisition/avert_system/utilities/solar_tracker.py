@@ -92,11 +92,9 @@ def evaluate_orbital_parameters(
         + (
             26
             + (
-                (
-                    21.448
-                    - julian_century
-                    * (46.815 + julian_century * (0.00059 - julian_century * 0.001813))
-                )
+                21.448
+                - julian_century
+                * (46.815 + julian_century * (0.00059 - julian_century * 0.001813))
             )
             / 60
         )

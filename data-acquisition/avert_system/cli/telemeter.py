@@ -45,7 +45,7 @@ def _send_file_lan(file: pathlib.Path, ip: str, telemetry_config: dict) -> int:
 def _send_file_upload_server(
     file: pathlib.Path,
     ip: str,
-    telemetry_config: dict
+    telemetry_config: dict,
 ) -> int:
     """
     Uses the curl utility to send a file to a remote machine reachable via the internet.
@@ -58,6 +58,7 @@ def _send_file_upload_server(
 
     Returns
     -------
+    return_code: Reports the outcome of telemetry function.
 
     """
 
@@ -66,7 +67,7 @@ def _send_file_upload_server(
 
     destination = f"http://{ip}:{port}/upload?token={token}"
 
-    command = ["curl", f"-Ffile=@{file}", destination, "-s"]
+    command = ["curl", f"-Ffile=@{file}", destination]
 
     print(f"Sending:\n\t{file}\nto\n\t{destination}...")
     return subprocess.run(command, stdout=subprocess.DEVNULL).returncode
@@ -80,7 +81,7 @@ TELEMETRY_FN_LOOKUP = {
 
 def telemeter_data(args=None):
     """
-    A command-line entry point that performs data telemetry either via radio-networked
+    A command-line entry point that handles data telemetry either via radio-networked
     LAN or some form of internet connection to a remote server, whether that be by
     satellite or mobile data etc.
 
@@ -137,7 +138,7 @@ def telemeter_data(args=None):
         required=False,
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(sys.argv[2:])
 
     config = read_config()
 
@@ -177,9 +178,7 @@ def telemeter_data(args=None):
 
     if args.file is not None:
         file = pathlib.Path(args.file)
-        return_code = TELEMETRY_FN_LOOKUP[mode](
-            file, target_ip, config["telemetry"]
-        )
+        return_code = TELEMETRY_FN_LOOKUP[mode](file, target_ip, config["telemetry"])
         if return_code == 0:
             file.unlink()
             print("   ...success.")
