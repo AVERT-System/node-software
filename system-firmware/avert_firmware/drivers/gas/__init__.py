@@ -16,29 +16,25 @@ from .vaisala import query_gmp343
 from .novac import query as query_novac
 
 
-def handle_query(
-    instrument_config: dict, component_ip: str, dirs: dict, model: str
-) -> None:
+def handle_query(instrument_config: dict, dirs: dict) -> None:
     """
     Handles queries to gas instruments attached to the AVERT system.
 
     Parameters
     ----------
     instrument_config: Gas instrument configuration information.
-    component_ip: Address of component within network.
     dirs: Directories to use for receipt, archival, and transmission.
-    model: The model of instrument e.g. 'vaisala-gmp343'.
 
     """
 
     utc_now = dt.utcnow()
 
     print("Retrieving gas data file...")
-    match model:
+    match instrument_config["model"]:
         case "vaisala-gmp343":
             filename = query_gmp343(utc_now, instrument_config, dirs)
         case "novac-doas":
-            filename = query_novac(utc_now, component_ip, instrument_config, dirs)
+            filename = query_novac(utc_now, instrument_config, dirs)
 
     if filename is not None:
         print("   ...syncing data...")

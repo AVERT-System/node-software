@@ -14,12 +14,10 @@ from datetime import datetime as dt
 import subprocess
 import sys
 
-from avert_firmware.utilities import scp, sync_data
+from avert_firmware.utilities import ping, scp, sync_data
 
 
-def query(
-    utc_now: dt, instrument_config: dict, component_ip: str, dirs: dict, model: str
-) -> None:
+def query(utc_now: dt, instrument_config: dict, dirs: dict) -> None:
     """
     Utility script that will pull data from the DOAS logger and sync with both a local
     redundant archive and the hub unit for telemetry.
@@ -27,11 +25,16 @@ def query(
     Parameters
     ----------
     instrument_config: Scanning DOAS configuration information.
-    component_ip: Address of component within network.
     dirs: Directories to use for receipt, archival, and transmission.
-    model: The model of instrument (not used, but would be 'novac' or similar).
 
     """
+
+    component_ip = instrument_config["ip"]
+    print("   ...verifying instrument is visible on network...")
+    return_code = ping(component_ip)
+    if return_code != 0:
+        print(f"Instrument not visible at: {component_ip}.\nExiting.")
+        sys.exit(return_code)
 
     print("Retrieving DOAS data...")
     dirs["receive"].mkdir(exist_ok=True, parents=True)

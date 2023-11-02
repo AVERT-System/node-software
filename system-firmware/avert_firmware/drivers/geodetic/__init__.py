@@ -16,31 +16,26 @@ from avert_firmware.utilities import get_starttime_endtime, sync_data
 from .reftek import query_resolute_polar
 
 
-def handle_query(
-    instrument_config: dict, component_ip: str, dirs: dict, model: str
-) -> None:
+def handle_query(instrument_config: dict, dirs: dict) -> None:
     """
     Handles queries to GNSS receivers attached to the AVERT system.
 
     Parameters
     ----------
     instrument_config: GNSS receiver configuration information.
-    component_ip: Address of component within network.
     dirs: Directories to use for receipt, archival, and transmission.
-    model: The model of instrument e.g. 'resolute_polar'.
 
     """
 
     starttime, _ = get_starttime_endtime(dt.utcnow(), timestep=60)
 
     print("Retrieving GNSS data file...")
-    match model:
+    match instrument_config["model"]:
         case "resolute_polar":
             filename = query_resolute_polar(
                 starttime,
                 "1",
                 instrument_config,
-                component_ip,
                 dirs,
             )
 
