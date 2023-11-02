@@ -15,7 +15,6 @@ owner = "The AVERT project at Lamont-Doherty Earth Observatory"
 owner_contact = "avert-system@proton.me"
 
 [network]
-subnet = "192.168.18"
 user = "user"
 pass = "user"
 
@@ -30,6 +29,7 @@ telemeter_by = "radio"
 
 [components.seismic]
 ip = "192.168.18.102"
+model = "centaur"
 network_code = "LD"
 site_code = "NODE1"
 location_code = ""
@@ -41,6 +41,7 @@ timestep = 20
 
 [components.magnetic]
 ip = "192.168.18.102"
+model = "centaur"
 network_code = "LD"
 site_code = "NODE1"
 location_code = ""
@@ -50,8 +51,20 @@ file_format = "{network}.{station}.{location}.{channel}.{stream_type}.{datetime.
 timestep = 60
 
 [components.gas]
+model = "vaisala-gmp343"
 port = "/dev/ttymxc4"
 baudrate = 19200
 sample_n = 10
 archive_format = "{datetime.year}/{station}"
 file_format = "{station}.{datetime.year}.{jday:03d}.CO2.csv"
+
+[components.geodetic]
+ip = "192.168.18.103"
+model = "resolute_polar"
+site_code = "HUB1"
+port = 80
+archive_format = "hourly/raw/{datetime.year}/{jday:03d}/{station}"
+file_format = "{station}00US_S_{datetime.year}{jday:03d}{datetime.hour:02d}{datetime.minute:02d}_{rate}_M{mtype}.sbf"
+serial_number = 367
+rate = "01H_30S"
+mtype = 0

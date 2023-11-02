@@ -31,7 +31,7 @@ def _write_image(
 
 
 def handle_query(
-    instrument_config: dict, component_ip: str, dirs: dict, model: str, metadata: dict
+    instrument_config: dict, dirs: dict, metadata: dict
 ) -> None:
     """
     Handles queries to cameras attached to the AVERT system.
@@ -53,6 +53,8 @@ def handle_query(
         metadata["timezone"],
         instrument_config["daylight_buffer"],
     )
+
+    component_ip = instrument_config["ip"]
 
     if is_daytime:
         # First image at the top of the hour is full resolution

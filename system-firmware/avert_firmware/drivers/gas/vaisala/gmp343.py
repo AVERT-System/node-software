@@ -17,7 +17,7 @@ import numpy as np
 import serial
 
 
-def query(instrument_config: dict, dirs: dict) -> str:
+def query(utc_now: dt, instrument_config: dict, dirs: dict) -> str:
     """
     Retrieve a burst of time-averaged CO2 measurements from the probe via the serial
     connection.
@@ -33,28 +33,31 @@ def query(instrument_config: dict, dirs: dict) -> str:
 
     """
 
-    with serial.Serial(
-        port=instrument_config["port"],
-        baudrate=instrument_config["baudrate"],
-        bytesize=8,
-        parity="N",
-        stopbits=1,
-        timeout=3,
-    ) as serial_connection:
-        if not serial_connection.is_open:
-            print(f"{serial_connection.name} is not open. Exiting.")
-            serial_connection.close()
-            sys.exit(1)
+    try:
+        with serial.Serial(
+            port=instrument_config["port"],
+            baudrate=instrument_config["baudrate"],
+            bytesize=8,
+            parity="N",
+            stopbits=1,
+            timeout=3,
+        ) as serial_connection:
+            if not serial_connection.is_open:
+                print(f"{serial_connection.name} is not open. Exiting.")
+                serial_connection.close()
+                sys.exit(1)
 
-        print("Serial connection established, reading data...")
-        utc_now = dt.utcnow()
-        co2_mean = np.mean(
-            [
-                float(serial_connection.readline().strip())
-                for _ in range(instrument_config["sample_n"])
-            ]
-        )
-        print("   ...success!")
+            print("Serial connection established, reading data...")
+            co2_mean = np.mean(
+                [
+                    float(serial_connection.readline().strip())
+                    for _ in range(instrument_config["sample_n"])
+                ]
+            )
+            print("   ...success!")
+    except serial.serialutil.SerialException:
+        print(f"   ...could not open port {instrument_config['port']}. Exiting.")
+        sys.exit(1)
 
     filename = instrument_config["file_format"].format(
         station=instrument_config["site_code"],

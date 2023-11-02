@@ -19,18 +19,14 @@ from avert_firmware.utilities import (
 from .nanometrics import query_centaur
 
 
-def handle_query(
-    instrument_config: dict, component_ip: str, dirs: dict, model: str
-) -> None:
+def handle_query(instrument_config: dict, dirs: dict) -> None:
     """
     Handles queries to magnetic instruments attached to the AVERT system.
 
     Parameters
     ----------
     instrument_config: Magnetometer configuration information.
-    component_ip: Address of component within network.
     dirs: Directories to use for receipt, archival, and transmission.
-    model: The model of instrument e.g. 'centaur'.
 
     """
 
@@ -43,7 +39,7 @@ def handle_query(
     for channel in instrument_config["channel_codes"]:
         print(f"  ...retrieving {channel} data...")
 
-        match model:
+        match instrument_config["model"]:
             case "centaur":
                 filename = query_centaur(
                     starttime,
@@ -51,7 +47,6 @@ def handle_query(
                     channel,
                     "D",
                     instrument_config,
-                    component_ip,
                     dirs,
                 )
 

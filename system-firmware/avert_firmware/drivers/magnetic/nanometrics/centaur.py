@@ -10,9 +10,11 @@ This module contains drivers for the Nanometrics Centaur datalogger.
 """
 
 from datetime import datetime as dt
+import sys
 
 import requests
 
+from avert_firmware.utilities import ping
 from avert_firmware.utilities.errors import FileQueryException
 
 
@@ -22,7 +24,6 @@ def query(
     channel: str,
     stream_type: str,
     instrument_config: dict,
-    component_ip: str,
     dirs: dict,
 ) -> str:
     """
@@ -36,7 +37,6 @@ def query(
     channel: FDSN channel code descriptor.
     stream_type: SeisComp3 string to distinguish between data and logs.
     instrument_config: Seismometer configuration information.
-    component_ip: Address of component within network.
     dirs: Directories to use for receipt, archival, and transmission.
 
     Returns
@@ -60,6 +60,13 @@ def query(
         datetime=starttime,
         jday=starttime.timetuple().tm_yday,
     )
+
+    component_ip = instrument_config["ip"]
+    print("   ...verifying instrument is visible on network...")
+    return_code = ping(component_ip)
+    if return_code != 0:
+        print(f"Instrument not visible at: {component_ip}.\nExiting.")
+        sys.exit(return_code)
 
     # Query Centaur for data matching request parameters
     url = (

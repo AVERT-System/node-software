@@ -10,9 +10,11 @@ This module contains drivers for the Resolute Polar GNSS receiver.
 """
 
 from datetime import datetime as dt
+import sys
 
 import requests
 
+from avert_firmware.utilities import ping
 from avert_firmware.utilities.errors import FileQueryException
 
 
@@ -40,7 +42,6 @@ def query(
     starttime: dt,
     filestream: str,
     instrument_config: dict,
-    component_ip: str,
     dirs: dict,
 ) -> str:
     """
@@ -52,7 +53,6 @@ def query(
     starttime: Beginning of time period of request.
     endtime: End of time period of request.
     instrument_config: GNSS receiver configuration information.
-    component_ip: Address of component within network.
     dirs: Directories to use for receipt, archival, and transmission.
 
     Returns
@@ -73,6 +73,13 @@ def query(
         rate=instrument_config["rate"],
         mtype=instrument_config["mtype"],
     )
+
+    component_ip = instrument_config["ip"]
+    print("   ...verifying instrument is visible on network...")
+    return_code = ping(component_ip)
+    if return_code != 0:
+        print(f"Instrument not visible at: {component_ip}.\nExiting.")
+        sys.exit(return_code)
 
     # Construct filename to query from logger
     query_filename = QUERY_FILENAME_FORMAT.format(
