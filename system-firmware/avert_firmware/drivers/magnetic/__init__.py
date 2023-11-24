@@ -12,10 +12,8 @@ dataloggers for magnetic field systems.
 
 from datetime import datetime as dt
 
-from avert_firmware.utilities import (
-    get_starttime_endtime,
-    sync_data,
-)
+from avert_firmware.utilities import get_starttime_endtime, sync_data
+from avert_firmware.utilities.errors import FileQueryException
 from .nanometrics import query_centaur
 
 
@@ -41,14 +39,17 @@ def handle_query(instrument_config: dict, dirs: dict) -> None:
 
         match instrument_config["model"]:
             case "centaur":
-                filename = query_centaur(
-                    starttime,
-                    endtime,
-                    channel,
-                    "D",
-                    instrument_config,
-                    dirs,
-                )
+                try:
+                    filename = query_centaur(
+                        starttime,
+                        endtime,
+                        channel,
+                        "D",
+                        instrument_config,
+                        dirs,
+                    )
+                except FileQueryException:
+                    continue
 
         print(f"  ...syncing {channel} data...")
         archive_path = instrument_config["archive_format"].format(

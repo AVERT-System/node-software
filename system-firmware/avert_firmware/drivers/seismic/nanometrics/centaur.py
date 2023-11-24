@@ -13,6 +13,7 @@ from datetime import datetime as dt
 import sys
 
 import requests
+import urllib.parse
 
 from avert_firmware.utilities import ping
 from avert_firmware.utilities.errors import FileQueryException
@@ -69,17 +70,18 @@ def query(
         sys.exit(return_code)
 
     # Query Centaur for data matching request parameters
-    url = (
-        f"http://{component_ip}/fdsnws/dataselect/1/query?"
-        f"network={instrument_config['network_code']}&"
-        f"station={instrument_config['site_code']}&"
-        f"location={'*' if location_code is None else location_code}&"
-        f"channel={channel}&"
-        f"starttime={str(starttime).replace(' ', 'T')}&"
-        f"endtime={str(endtime).replace(' ', 'T')}"
-    )
+    url = f"http://{component_ip}/fdsnws/dataselect/1/query"
+    payload = {
+        "network": instrument_config["network_code"],
+        "station": instrument_config["site_code"],
+        "location": r"*" if location_code == "" else location_code,
+        "channel": channel,
+        "starttime": str(starttime).replace(" ", "T"),
+        "endtime": str(endtime).replace(" ", "T"),
+    }
+    payload_str = urllib.parse.urlencode(payload, safe=":+")
 
-    r = requests.get(url)
+    r = requests.get(url, params=payload_str)
     if r.status_code == 200:
         print("    ...success!")
     elif r.status_code == 204:
