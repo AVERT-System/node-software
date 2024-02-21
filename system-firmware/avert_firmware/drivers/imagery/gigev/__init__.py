@@ -17,7 +17,7 @@ from PIL import Image
 import numpy as np
 
 try:
-    import avert_firmware.drivers.imaging.gigev.libgigev as gev
+    import avert_firmware.drivers.imagery.gigev.libgigev as gev
 except OSError:
     print("Could not import GigE-V library")
 

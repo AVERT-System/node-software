@@ -13,7 +13,7 @@ import argparse
 import pathlib
 import sys
 
-from avert_firmware.drivers.imaging import handle_query as imagery_query
+from avert_firmware.drivers.imagery import handle_query as imagery_query
 from avert_firmware.drivers.geodetic import handle_query as geodetic_query
 from avert_firmware.drivers.gas import handle_query as gas_query
 from avert_firmware.drivers.magnetic import handle_query as magnetic_query
