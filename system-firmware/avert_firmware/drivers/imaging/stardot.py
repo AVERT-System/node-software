@@ -11,8 +11,8 @@ Retrieve webcam images from a networked webcam.
 
 import sys
 
-import numpy as np
 import imageio.v3 as iio
+import numpy as np
 import requests
 
 

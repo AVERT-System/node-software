@@ -13,7 +13,7 @@ import argparse
 import pathlib
 import sys
 
-from avert_firmware.drivers.imaging import handle_query as imaging_query
+from avert_firmware.drivers.imaging import handle_query as imagery_query
 from avert_firmware.drivers.geodetic import handle_query as geodetic_query
 from avert_firmware.drivers.gas import handle_query as gas_query
 from avert_firmware.drivers.magnetic import handle_query as magnetic_query
@@ -22,7 +22,7 @@ from avert_firmware.utilities import read_config
 
 
 FN_MAP = {
-    "imaging": imaging_query,
+    "imagery": imagery_query,
     "gas": gas_query,
     "geodetic": geodetic_query,
     "magnetic": magnetic_query,
@@ -75,7 +75,7 @@ def query_handler(args=None):
             pass
         case "geodetic":
             pass
-        case "imaging":
+        case "imagery":
             kwargs["metadata"] = config["metadata"]
 
     # --- Map arguments to appropriate instrument driver ---

@@ -39,7 +39,7 @@ def _send_file_lan(file: pathlib.Path, ip: str, telemetry_config: dict) -> int:
     destination = f"user@{ip}:{file.parents[1] / 'receive' / file.name}"
 
     print(f"Sending:\n\t{file}\nto\n\t{destination}...")
-    return rsync(file, destination, remove_source=False, max_attempts=1)
+    return rsync(file, destination, remove_source=True, mkpath=True, max_attempts=1)
 
 
 def _send_file_upload_server(

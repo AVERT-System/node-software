@@ -37,7 +37,7 @@ dependencies = [
 
 [project.scripts]
 avertctl = "avert_firmware.ctl:cli"
-reftek-config = "avert_firmware.instrument_drivers.gnss_loggers.reftek.configure:configure_resolute_polar"
+reftek-config = "avert_firmware.drivers.geodetic.reftek.configure:configure_resolute_polar"
 
 [project.optional-dependencies]
 development = ["ruff", "ipython"]

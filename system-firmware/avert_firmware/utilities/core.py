@@ -32,6 +32,7 @@ def sync_data(
     archive_path: str,
     new_filename: str = None,
     transmit: bool = True,
+    mkpath: bool = False,
 ) -> None:
     """
     Sync data from the receive directory to the permanent archive and the
@@ -44,6 +45,7 @@ def sync_data(
     archive_path: Describes any sub-directory structure in the archive.
     new_filename: Optionally, rename the file during the sync.
     transmit: Toggle for whether to also transmit file.
+    mkpath: Construct the destination's path component.
 
     """
 
@@ -57,6 +59,7 @@ def sync_data(
     _ = rsync(
         source=str(dirs["receive"] / source_filename),
         destination=str(archive_path / destination_filename),
+        mkpath=mkpath,
     )
 
     if transmit:
@@ -66,6 +69,7 @@ def sync_data(
             source=str(dirs["receive"] / source_filename),
             destination=str(dirs["transmit"] / destination_filename),
             remove_source=True,
+            mkpath=mkpath,
         )
 
 
@@ -89,7 +93,11 @@ def ping(ip_address: str, max_attempts: int = 3) -> int:
 
 
 def rsync(
-    source: str, destination: str, remove_source: bool = False, max_attempts: int = 3
+    source: str,
+    destination: str,
+    remove_source: bool = False,
+    mkpath: bool = False,
+    max_attempts: int = 3
 ) -> int:
     """
     Utility function that attempts an rsync command a number of times.
@@ -99,6 +107,7 @@ def rsync(
     source: Location of file to be sync'd.
     destination: Location to which file is to be sync'd.
     remove_source: Toggle for whether the source file is removed.
+    mkpath: Construct the destination's path component.
     max_attempts: Maximum number of attempts before deeming the sync a failure.
 
     Returns
@@ -110,6 +119,8 @@ def rsync(
     command = ["rsync", "-avq"]
     if remove_source:
         command.append("--remove-source-files")
+    if mkpath:
+        command.append("--mkpath")
     command.extend([source, destination])
 
     return _retry_command_on_failure(command, command[0], max_attempts)
