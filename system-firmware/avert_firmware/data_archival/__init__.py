@@ -13,7 +13,7 @@ import pathlib
 from .gas import _migrate_vaisala_co2_file
 from .gnss import _migrate_sbf_file
 from .images import _migrate_image_file
-from .seismic import _migrate_miniseed_file
+from .miniseed import _migrate_miniseed_file
 
 
 def id_file_format(file_: pathlib.Path):
