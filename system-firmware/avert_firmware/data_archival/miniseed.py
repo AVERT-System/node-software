@@ -10,8 +10,7 @@ Migration functions for miniSEED data files.
 """
 
 import pathlib
-
-import obspy
+import subprocess
 
 
 def _migrate_miniseed_file(
@@ -33,50 +32,21 @@ def _migrate_miniseed_file(
 
     print("\t...miniseed file identified...")
 
-    try:
-        st = obspy.read(str(file_))
-    except TypeError:
-        return 1
-
     if append_datatype:
         archive_root = archive_root / "miniseed"
 
     archive_path_format = "{year}/{network}/{station}/{channel}.{data_type}"
-    filename_format = "{network}.{station}.{location}.{channel}.{data_type}.{year}.{jday:03d}"
+    network, station, _, channel, _, year, *_ = file_.name.split(".")
 
-    channels = list(set([tr.stats.channel for tr in st]))
+    outfile = archive_path_format.format(
+        year=year,
+        network=network,
+        station=station,
+        channel=channel,
+        data_type="D",
+    ) / file_.name
 
-    for channel in channels:
-        channel_st = st.copy().select(channel=channel)
+    outfile.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.Popen(["rsync", "-auz", file_, outfile]).wait()
 
-        starttime = min([tr.stats.starttime for tr in channel_st])
-
-        archive_path = archive_root / archive_path_format.format(
-            year=starttime.year,
-            network=channel_st[0].stats.network,
-            station=channel_st[0].stats.station,
-            channel=channel_st[0].stats.channel,
-            data_type="D",
-        )
-        archive_path.mkdir(parents=True, exist_ok=True)
-        filename = filename_format.format(
-            network=channel_st[0].stats.network,
-            station=channel_st[0].stats.station,
-            location=channel_st[0].stats.location,
-            channel=channel_st[0].stats.channel,
-            data_type="D",
-            year=starttime.year,
-            jday=starttime.julday,
-        )
-        print(f"\t...channel file: {filename}")
-        if (archive_path / filename).is_file():
-            print("\t    ...data from this day already exists -> appending...")
-            merge_st = obspy.read(str(archive_path / filename))
-            merge_st += channel_st
-            merge_st.merge(method=-1)
-            merge_st.write(str(archive_path / filename), format="MSEED")
-        else:
-            print("\t    ...no file for this day yet -> creating new file...")
-            channel_st.write(str(archive_path / filename), format="MSEED")
-    
     return 0
