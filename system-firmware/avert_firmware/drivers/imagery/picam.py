@@ -10,12 +10,18 @@ Retrieve webcam images from Raspberry Pi camera using libcamera and picamera2.
 """
 
 import numpy as np
-from picamera2 import Picamera2 as picam
-from libcamera import controls
+try:
+    from picamera2 import Picamera2 as pc2
+    from libcamera import controls
+except ModuleNotFoundError:
+    class pc2:
+        def __init__(self):
+            pass
+    print("Could not import Picamera2 module, some features may not work.")
 
 
 def capture_image(
-    camera: picam | None = None, camera_port: int | None = None
+    camera: pc2 | None = None, camera_port: int | None = None
 ) -> np.ndarray:
     """
     Utility function that retrieves an image from the attached Raspberry Pi camera.
@@ -23,7 +29,7 @@ def capture_image(
     """
 
     if camera is None:
-        camera = picam(camera_port)
+        camera = pc2(camera_port)
         camera.set_controls(
             {
                 "Saturation": 0.0,

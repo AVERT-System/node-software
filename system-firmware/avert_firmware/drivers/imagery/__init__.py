@@ -11,15 +11,16 @@ webcameras.
 """
 
 from datetime import datetime as dt
-# import subprocess
 import sys
 import time
 
 import imageio.v3 as iio
 import numpy as np
-from picamera2 import Picamera2 as picam
+try:
+    from picamera2 import Picamera2 as pc2
+except ModuleNotFoundError:
+    print("Could not import Picamera2 module, some features may not work.")
 
-from avert_firmware.utilities import sync_data
 from avert_firmware.utilities.solar_tracker import is_it_daytime
 from .stardot import capture_image as capture_image_stardot
 from .gigev import capture_image as capture_image_gigev
@@ -61,12 +62,6 @@ def handle_query(instrument_config: dict, dirs: dict, metadata: dict) -> None:
 
                 _write_image(image, image_name, dirs, instrument_config["quality"])
 
-                archive_path = (
-                    f"infrared/{metadata['vnum']}/{utcnow.year}/"
-                    f"{metadata['site_code']}/{julday:03d}"
-                )
-                sync_data(image_name, dirs, archive_path)
-
                 time.sleep(instrument_config["time_between_frames"])
         case "stardot":
             daytime = is_it_daytime(
@@ -84,10 +79,9 @@ def handle_query(instrument_config: dict, dirs: dict, metadata: dict) -> None:
                 image = capture_image_stardot(instrument_config)
                 image_name = (
                     f"{utcnow.year}-{utcnow.month:02}-{utcnow.day:02d}_"
-                    f"{utcnow.hour:02d}{utcnow.minute:02d}{utcnow.second:02d}.jpg"
+                    f"{utcnow.hour:02d}{utcnow.minute:02d}{utcnow.second:02d}-0000.jpg"
                 )
 
-                # Write out image
                 _write_image(image, image_name, dirs, instrument_config["quality"])
 
                 time.sleep(instrument_config["time_between_frames"])
@@ -102,17 +96,15 @@ def handle_query(instrument_config: dict, dirs: dict, metadata: dict) -> None:
             if not daytime:
                 sys.exit(1)
 
-            camera = picam(instrument_config["camera_port"])  # Maybe move this to a command line arg
-            camera 
+            camera = pc2(instrument_config["camera_port"])
             for _ in range(instrument_config["frame_count"]):
-                image = capture_image_picam(instrument_config, camera)
+                image = capture_image_picam(camera)
                 utcnow = dt.utcnow()
                 image_name = (
                     f"{utcnow.year}-{utcnow.month:02}-{utcnow.day:02d}_"
-                    f"{utcnow.hour:02d}{utcnow.minute:02d}{utcnow.second:02d}.jpg"
+                    f"{utcnow.hour:02d}{utcnow.minute:02d}{utcnow.second:02d}-0000.jpg"
                 )
 
-                # Write out image
                 _write_image(image, image_name, dirs, instrument_config["quality"])
 
                 time.sleep(instrument_config["time_between_frames"])

@@ -32,6 +32,7 @@ dependencies = [
     "imageio",
     "minimalmodbus",
     "numpy",
+    "obspy",
     "requests",
 ]
 

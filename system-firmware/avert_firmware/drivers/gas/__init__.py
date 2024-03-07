@@ -36,12 +36,4 @@ def handle_query(instrument_config: dict, dirs: dict) -> None:
         case "novac-doas":
             filename = query_novac(utc_now, instrument_config, dirs)
 
-    if filename is not None:
-        print("   ...syncing data...")
-        archive_path = instrument_config["archive_format"].format(
-            station=instrument_config["site_code"],
-            datetime=utc_now,
-            jday=utc_now.timetuple().tm_yday,
-        )
-        sync_data(filename, dirs, archive_path)
     print("Retrieval and sync of gas data complete.")

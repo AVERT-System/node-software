@@ -3,7 +3,7 @@ This module contains a collection of driver scripts for a variety of commercial
 dataloggers for magnetic field systems.
 
 :copyright:
-    2023, The AVERT System Team.
+    2024, The AVERT System Team.
 :license:
     GNU General Public License, Version 3
     (https://www.gnu.org/licenses/gpl-3.0.html)
@@ -12,7 +12,7 @@ dataloggers for magnetic field systems.
 
 from datetime import datetime as dt
 
-from avert_firmware.utilities import get_starttime_endtime, sync_data
+from avert_firmware.utilities import get_starttime_endtime
 from avert_firmware.utilities.errors import FileQueryException
 from .nanometrics import query_centaur
 
@@ -51,13 +51,4 @@ def handle_query(instrument_config: dict, dirs: dict) -> None:
                 except FileQueryException:
                     continue
 
-        print(f"  ...syncing {channel} data...")
-        archive_path = instrument_config["archive_format"].format(
-            network=instrument_config["network_code"],
-            station=instrument_config["site_code"],
-            channel=channel,
-            stream_type="D",
-            datetime=starttime,
-        )
-        sync_data(filename, dirs, archive_path)
     print("Retrieval and sync of magnetic data complete.")
