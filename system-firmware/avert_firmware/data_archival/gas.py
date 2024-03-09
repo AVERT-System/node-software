@@ -50,7 +50,7 @@ def _migrate_vaisala_co2_file(
     if not archive_file.is_file():
         archive_file.parent.mkdir(exist_ok=True, parents=True)
         with archive_file.open("w") as f:
-            print(data[0], file=f)
+            print(data[0], file=f, end="")
 
     with archive_file.open("a") as f:
         print(data[1], file=f, end="")

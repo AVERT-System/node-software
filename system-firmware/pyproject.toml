@@ -30,6 +30,7 @@ classifiers = [
 ]
 dependencies = [
     "imageio",
+    "inotify",
     "minimalmodbus",
     "numpy",
     "requests",

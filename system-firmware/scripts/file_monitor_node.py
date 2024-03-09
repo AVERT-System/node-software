@@ -11,7 +11,6 @@ relevant file archive.
 """
 
 import pathlib
-import sys
 
 from avert_firmware.cli.telemeter import TELEMETRY_FN_LOOKUP
 from avert_firmware.drivers.network_relay import set_relay_state
@@ -37,23 +36,21 @@ def monitor_for_files():
     data_dir = pathlib.Path(config["data_archive"])
 
     i = inotify.adapters.Inotify()
-    for receive_dir in data_dir.glob("receive/"):
+    for receive_dir in data_dir.glob("*/receive/"):
         i.add_watch(str(receive_dir))
-    for transmit_dir in data_dir.glob("transmit/"):
+    for transmit_dir in data_dir.glob("*/transmit/"):
         i.add_watch(str(transmit_dir))
 
     for event in i.event_gen(yield_nones=False):
         (_, type_names, path, filename) = event
-        print(type_names)
         if "IN_CLOSE_WRITE" not in type_names and "IN_MOVED_TO" not in type_names:
             continue
-        print(filename)
         
         filepath = pathlib.Path(path) / filename
-        if filepath.name[0] == ".":
+        if filepath.name[0] == ".":  # temporary file for rsync pre-hash checks
             continue
 
-        print(f"File found in {filepath.parent.name} directory:\n{filepath.name}")
+        print(f"File found in {filepath.parent.name} directory:\n\t{filepath.name}")
         match filepath.parent.name:
             case "receive":
                 print("   ...migrating...")
@@ -74,16 +71,15 @@ def monitor_for_files():
                     mkpath=True,
                 )
 
-                print("    ...migration complete.\n")
+                print("   ...migration complete...")
             case "transmit":
-                    
                 # Check relevant telemetry equipment is present (satellite/radio transceiver)
                 transceiver_ip = config["telemetry"]["transceiver_ip"]
-                print(f"Searching for local telemetry equipment at {transceiver_ip}...")
+                print(f"   ...searching for telemetry equipment at {transceiver_ip}...")
                 return_code = ping(transceiver_ip)
                 if return_code != 0:
                     print(
-                        "   ...local telemetry equipment not found, attempting to power on..."
+                        "      ...telemetry equipment not found, attempting to power on..."
                     )
                     return_code = set_relay_state(
                         config["relay"]["ip"],
@@ -91,25 +87,25 @@ def monitor_for_files():
                         1,
                     )
                     if return_code != 0:
-                        print("   ...power on failed, exiting.")
-                        sys.exit(return_code)
+                        print("   ...power on failed.")
+                        continue
 
                     return_code = ping(transceiver_ip)
                     if return_code != 0:
-                        print("   ...could not power local telemetry equipment, exiting.")
-                        sys.exit(return_code)
-                print("...found.")
+                        print("      ...could not power telemetry equipment.")
+                        continue
+                print("   ...found...")
                 
                 filepath = pathlib.Path(path) / filename
-                print(f"File found in transmit directory:\n{filepath.name}\n   Telemetering...")
+                print("   ...telemetering...")
                 return_code = TELEMETRY_FN_LOOKUP[mode](
                     filepath, target_ip, config["telemetry"]
                 )
         
-        print("Cleanup...")
+        print("   ...cleaning up...")
         if return_code == 0:
             filepath.unlink()
-            print("   ...success.")
+            print("   ...success.\n")
 
 if __name__ == "__main__":
     monitor_for_files()

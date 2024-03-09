@@ -38,7 +38,7 @@ def _migrate_miniseed_file(
     archive_path_format = "{year}/{network}/{station}/{channel}.{data_type}"
     network, station, _, channel, _, year, *_ = file_.name.split(".")
 
-    outfile = archive_path_format.format(
+    outfile = archive_root / archive_path_format.format(
         year=year,
         network=network,
         station=station,

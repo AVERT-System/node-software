@@ -29,7 +29,7 @@ def _migrate_image_file(
 
     """
 
-    image_type = file_.parent.name
+    image_type = file_.parents[1].name
 
     match image_type:
         case "infrared":
