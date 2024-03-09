@@ -58,6 +58,15 @@ def query_handler(args=None):
         sys.exit(1)
 
     data_dir = pathlib.Path(config["data_archive"]) / args.instrument
+    if args.instrument == "imagery":
+        match kwargs["instrument_config"]["model"]:
+            case "gigev":
+                data_dir = data_dir / "infrared"
+            case "picam":
+                data_dir = data_dir / "visible"
+            case "stardot":
+                data_dir = data_dir / "visible"
+
 
     kwargs["dirs"] = {
         "receive": data_dir / "receive",
